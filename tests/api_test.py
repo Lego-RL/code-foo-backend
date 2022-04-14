@@ -39,8 +39,8 @@ def test_num_entries_match():
         assert result  # ensure dict is not None
         assert result["id"] == i
 
-    with pytest.raises(json.JSONDecodeError):
-        result = requests.get(f"{root_url}id/{348}").json()
+    result = requests.get(f"{root_url}id/{348}")
+    assert result.status_code == 404
 
 
 def test_api_data():
@@ -68,6 +68,34 @@ def test_score_endpoint():
     for entry in data:
         assert last_score >= entry["review_score"]
         last_score = entry["review_score"]
+
+
+def test_type_match():
+    """
+    Tests /type/{} endpoint to make sure that all items
+    returned are of expected type. Also makes sure there
+    is the same # of items in the database with a given
+    type as there are returned by the API.
+    """
+
+    valid_types = ("Movie", "Show", "Comic", "Game")
+
+    # ensure all types API returns match the given type
+    for type_to_check in valid_types:
+        data = requests.get(f"{root_url}type/{type_to_check}").json()
+
+        for entry in data:
+            assert entry["media_type"] == type_to_check
+
+    # ensure expected # of entries returned
+    for type_to_check in valid_types:
+        data = requests.get(f"{root_url}type/{type_to_check}").json()
+
+        cursor.execute(
+            """SELECT COUNT(id) FROM data WHERE media_type=?""", (type_to_check,)
+        )
+        expected_entries = cursor.fetchone()[0]
+        assert expected_entries == len(data)
 
 
 # if __name__ == "__main__":

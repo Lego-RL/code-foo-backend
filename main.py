@@ -12,7 +12,7 @@ cursor = con.cursor()
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello World! Check the README for available endpoints."}
 
 
 @app.get("/id/{id}", status_code=200)
